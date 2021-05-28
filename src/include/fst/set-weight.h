@@ -1,17 +1,3 @@
-// Copyright 2005-2020 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the 'License');
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an 'AS IS' BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -22,13 +8,12 @@
 #ifndef FST_SET_WEIGHT_H_
 #define FST_SET_WEIGHT_H_
 
+#include <cstdlib>
+
 #include <algorithm>
 #include <list>
-#include <random>
 #include <string>
 #include <vector>
-
-#include <fst/types.h>
 
 #include <fst/union-weight.h>
 #include <fst/weight.h>
@@ -45,25 +30,23 @@ constexpr char kSetSeparator = '_';  // Label separator in sets.
 // as (+, *) for the semiring. SET_INTERSECT_UNION_RESTRICTED is a
 // restricted version of (intersect, union) that requires summed
 // arguments to be equal (or an error is signalled), useful for
-// algorithms that require a unique labelled path weight. SET_BOOLEAN
+// algorithms that require a unique labelled path weight.  SET_BOOLEAN
 // treats all non-Zero() elements as equivalent (with Zero() ==
 // UnivSet()), useful for algorithms that don't really depend on the
 // detailed sets.
-enum SetType {
-  SET_INTERSECT_UNION = 0,
-  SET_UNION_INTERSECT = 1,
-  SET_INTERSECT_UNION_RESTRICT = 2,
-  SET_BOOLEAN = 3
-};
+enum SetType { SET_INTERSECT_UNION = 0,
+               SET_UNION_INTERSECT = 1,
+               SET_INTERSECT_UNION_RESTRICT = 2,
+               SET_BOOLEAN = 3 };
 
 template <class>
 class SetWeightIterator;
 
 // Set semiring of integral labels.
-template <typename L, SetType S = SET_INTERSECT_UNION>
+template <typename Label_, SetType S = SET_INTERSECT_UNION>
 class SetWeight {
  public:
-  using Label = L;
+  using Label = Label_;
   using ReverseWeight = SetWeight<Label, S>;
   using Iterator = SetWeightIterator<SetWeight>;
   friend class SetWeightIterator<SetWeight>;
@@ -75,7 +58,7 @@ class SetWeight {
 
   // Input should be positive, sorted and unique.
   template <typename Iterator>
-  SetWeight(const Iterator begin, const Iterator end) {
+  SetWeight(const Iterator &begin, const Iterator &end) {
     for (auto iter = begin; iter != end; ++iter) PushBack(*iter);
   }
 
@@ -85,13 +68,11 @@ class SetWeight {
 
   template <SetType S2>
   explicit SetWeight(const SetWeight<Label, S2> &w)
-      : first_(w.first_), rest_(w.rest_) {}
+    : first_(w.first_), rest_(w.rest_) {}
 
   template <SetType S2>
   explicit SetWeight(SetWeight<Label, S2> &&w)
-      : first_(w.first_), rest_(std::move(w.rest_)) {
-    w.Clear();
-  }
+    : first_(w.first_), rest_(std::move(w.rest_)) { w.Clear(); }
 
   template <SetType S2>
   SetWeight &operator=(const SetWeight<Label, S2> &w) {
@@ -121,15 +102,15 @@ class SetWeight {
     return *no_weight;
   }
 
-  static const std::string &Type() {
-    static const std::string *const type =
-        new std::string(S == SET_UNION_INTERSECT
-                            ? "union_intersect_set"
-                            : (S == SET_INTERSECT_UNION
-                                   ? "intersect_union_set"
-                                   : (S == SET_INTERSECT_UNION_RESTRICT
-                                          ? "restricted_set_intersect_union"
-                                          : "boolean_set")));
+  static const string &Type() {
+    static const string *const type = new string(
+        S == SET_UNION_INTERSECT
+        ? "union_intersect_set"
+        : (S == SET_INTERSECT_UNION
+           ? "intersect_union_set"
+           : (S == SET_INTERSECT_UNION_RESTRICT
+              ? "restricted_set_intersect_union"
+              : "boolean_set")));
     return *type;
   }
 
@@ -241,6 +222,7 @@ class SetWeightIterator {
   typename decltype(Weight::rest_)::const_iterator iter_;
 };
 
+
 // SetWeight member functions follow that require SetWeightIterator
 
 template <typename Label, SetType S>
@@ -330,7 +312,8 @@ inline bool operator!=(const SetWeight<Label, S> &w1,
 
 template <typename Label, SetType S>
 inline bool ApproxEqual(const SetWeight<Label, S> &w1,
-                        const SetWeight<Label, S> &w2, float delta = kDelta) {
+                        const SetWeight<Label, S> &w2,
+                        float delta = kDelta) {
   return w1 == w2;
 }
 
@@ -356,7 +339,7 @@ inline std::ostream &operator<<(std::ostream &strm,
 template <typename Label, SetType S>
 inline std::istream &operator>>(std::istream &strm,
                                 SetWeight<Label, S> &weight) {
-  std::string str;
+  string str;
   strm >> str;
   using Weight = SetWeight<Label, S>;
   if (str == "EmptySet") {
@@ -379,8 +362,9 @@ inline std::istream &operator>>(std::istream &strm,
 }
 
 template <typename Label, SetType S>
-inline SetWeight<Label, S> Union(const SetWeight<Label, S> &w1,
-                                 const SetWeight<Label, S> &w2) {
+inline SetWeight<Label, S> Union(
+    const SetWeight<Label, S> &w1,
+    const SetWeight<Label, S> &w2) {
   using Weight = SetWeight<Label, S>;
   using Iterator = typename SetWeight<Label, S>::Iterator;
   if (!w1.Member() || !w2.Member()) return Weight::NoWeight();
@@ -412,8 +396,9 @@ inline SetWeight<Label, S> Union(const SetWeight<Label, S> &w1,
 }
 
 template <typename Label, SetType S>
-inline SetWeight<Label, S> Intersect(const SetWeight<Label, S> &w1,
-                                     const SetWeight<Label, S> &w2) {
+inline SetWeight<Label, S> Intersect(
+    const SetWeight<Label, S> &w1,
+    const SetWeight<Label, S> &w2) {
   using Weight = SetWeight<Label, S>;
   using Iterator = typename SetWeight<Label, S>::Iterator;
   if (!w1.Member() || !w2.Member()) return Weight::NoWeight();
@@ -441,8 +426,9 @@ inline SetWeight<Label, S> Intersect(const SetWeight<Label, S> &w1,
 }
 
 template <typename Label, SetType S>
-inline SetWeight<Label, S> Difference(const SetWeight<Label, S> &w1,
-                                      const SetWeight<Label, S> &w2) {
+inline SetWeight<Label, S> Difference(
+    const SetWeight<Label, S> &w1,
+    const SetWeight<Label, S> &w2) {
   using Weight = SetWeight<Label, S>;
   using Iterator = typename SetWeight<Label, S>::Iterator;
   if (!w1.Member() || !w2.Member()) return Weight::NoWeight();
@@ -471,8 +457,9 @@ inline SetWeight<Label, S> Difference(const SetWeight<Label, S> &w1,
 
 // Default: Plus = Intersect.
 template <typename Label, SetType S>
-inline SetWeight<Label, S> Plus(const SetWeight<Label, S> &w1,
-                                const SetWeight<Label, S> &w2) {
+inline SetWeight<Label, S> Plus(
+    const SetWeight<Label, S> &w1,
+    const SetWeight<Label, S> &w2) {
   return Intersect(w1, w2);
 }
 
@@ -518,8 +505,9 @@ inline SetWeight<Label, SET_BOOLEAN> Plus(
 
 // Default: Times = Union.
 template <typename Label, SetType S>
-inline SetWeight<Label, S> Times(const SetWeight<Label, S> &w1,
-                                 const SetWeight<Label, S> &w2) {
+inline SetWeight<Label, S> Times(
+    const SetWeight<Label, S> &w1,
+    const SetWeight<Label, S> &w2) {
   return Union(w1, w2);
 }
 
@@ -596,8 +584,7 @@ class WeightGenerate<SetWeight<Label, S>> {
  public:
   using Weight = SetWeight<Label, S>;
 
-  explicit WeightGenerate(uint64 seed = std::random_device()(),
-                          bool allow_zero = true,
+  explicit WeightGenerate(bool allow_zero = true,
                           size_t alphabet_size = kNumRandomWeights,
                           size_t max_set_length = kNumRandomWeights)
       : allow_zero_(allow_zero),
@@ -605,14 +592,11 @@ class WeightGenerate<SetWeight<Label, S>> {
         max_set_length_(max_set_length) {}
 
   Weight operator()() const {
-    const int n = std::uniform_int_distribution<>(
-        0, max_set_length_ + allow_zero_ - 1)(rand_);
+    const size_t n = rand() % (max_set_length_ + allow_zero_);  // NOLINT
     if (allow_zero_ && n == max_set_length_) return Weight::Zero();
     std::vector<Label> labels;
-    labels.reserve(n);
-    for (int i = 0; i < n; ++i) {
-      labels.push_back(
-          std::uniform_int_distribution<>(0, alphabet_size_)(rand_));
+    for (size_t i = 0; i < n; ++i) {
+      labels.push_back(rand() % alphabet_size_ + 1);  // NOLINT
     }
     std::sort(labels.begin(), labels.end());
     const auto labels_end = std::unique(labels.begin(), labels.end());
@@ -621,9 +605,11 @@ class WeightGenerate<SetWeight<Label, S>> {
   }
 
  private:
-  mutable std::mt19937_64 rand_;
+  // Permits Zero() and zero divisors.
   const bool allow_zero_;
+  // Alphabet size for random weights.
   const size_t alphabet_size_;
+  // Number of alternative random weights.
   const size_t max_set_length_;
 };
 

@@ -1,17 +1,3 @@
-// Copyright 2005-2020 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the 'License');
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an 'AS IS' BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 
@@ -23,17 +9,16 @@
 #include <utility>
 #include <vector>
 
-#include <fst/types.h>
 #include <fst/relabel.h>
 #include <fst/script/fst-class.h>
 
 namespace fst {
 namespace script {
 
-using RelabelArgs1 =
-    std::tuple<MutableFstClass *, const SymbolTable *, const SymbolTable *,
-               const std::string &, bool, const SymbolTable *,
-               const SymbolTable *, const std::string &, bool>;
+using RelabelArgs1 = std::tuple<MutableFstClass *, const SymbolTable *,
+                                const SymbolTable *, const string &, bool,
+                                const SymbolTable *, const SymbolTable *,
+                                const string &, bool>;
 
 template <class Arc>
 void Relabel(RelabelArgs1 *args) {
@@ -43,9 +28,11 @@ void Relabel(RelabelArgs1 *args) {
           std::get<7>(*args), std::get<8>(*args));
 }
 
-using RelabelArgs2 =
-    std::tuple<MutableFstClass *, const std::vector<std::pair<int64, int64>> &,
-               const std::vector<std::pair<int64, int64>> &>;
+using LabelPair = std::pair<int64, int64>;
+
+using RelabelArgs2 = std::tuple<MutableFstClass *,
+                                const std::vector<LabelPair> &,
+                                const std::vector<LabelPair> &>;
 
 template <class Arc>
 void Relabel(RelabelArgs2 *args) {
@@ -62,15 +49,14 @@ void Relabel(RelabelArgs2 *args) {
   Relabel(ofst, typed_ipairs, typed_opairs);
 }
 
-void Relabel(MutableFstClass *ofst, const SymbolTable *old_isymbols,
-             const SymbolTable *new_isymbols,
-             const std::string &unknown_isymbol, bool attach_new_isymbols,
-             const SymbolTable *old_osymbols, const SymbolTable *new_osymbols,
-             const std::string &unknown_osymbol, bool attach_new_osymbols);
-
 void Relabel(MutableFstClass *ofst,
-             const std::vector<std::pair<int64, int64>> &ipairs,
-             const std::vector<std::pair<int64, int64>> &opairs);
+             const SymbolTable *old_isymbols, const SymbolTable *new_isymbols,
+             const string &unknown_isymbol,  bool attach_new_isymbols,
+             const SymbolTable *old_osymbols, const SymbolTable *new_osymbols,
+             const string &unknown_osymbol, bool attach_new_osymbols);
+
+void Relabel(MutableFstClass *ofst, const std::vector<LabelPair> &ipairs,
+             const std::vector<LabelPair> &opairs);
 
 }  // namespace script
 }  // namespace fst

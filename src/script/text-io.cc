@@ -1,23 +1,10 @@
-// Copyright 2005-2020 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the 'License');
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an 'AS IS' BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 
 #include <fst/script/text-io.h>
 
 #include <cstring>
+#include <fstream>
 #include <ostream>
 #include <sstream>
 #include <utility>
@@ -25,17 +12,16 @@
 #include <fst/log.h>
 #include <fstream>
 #include <fst/util.h>
-#include <fst/windows_defs.inc>
 
 namespace fst {
 namespace script {
 
 // Reads vector of weights; returns true on success.
-bool ReadPotentials(const std::string &weight_type, const std::string &source,
+bool ReadPotentials(const string &weight_type, const string &filename,
                     std::vector<WeightClass> *potentials) {
-  std::ifstream istrm(source);
-  if (!istrm) {
-    LOG(ERROR) << "ReadPotentials: Can't open file: " << source;
+  std::ifstream istrm(filename);
+  if (!istrm.good()) {
+    LOG(ERROR) << "ReadPotentials: Can't open file: " << filename;
     return false;
   }
   static constexpr int kLineLen = 8096;
@@ -49,10 +35,10 @@ bool ReadPotentials(const std::string &weight_type, const std::string &source,
     if (col.empty() || col[0][0] == '\0') continue;
     if (col.size() != 2) {
       FSTERROR() << "ReadPotentials: Bad number of columns, "
-                 << "file = " << source << ", line = " << nline;
+                 << "file = " << filename << ", line = " << nline;
       return false;
     }
-    const ssize_t s = StrToInt64(col[0], source, nline, false);
+    const ssize_t s = StrToInt64(col[0], filename, nline, false);
     const WeightClass weight(weight_type, col[1]);
     while (potentials->size() <= s) {
       potentials->push_back(WeightClass::Zero(weight_type));
@@ -63,13 +49,13 @@ bool ReadPotentials(const std::string &weight_type, const std::string &source,
 }
 
 // Writes vector of weights; returns true on success.
-bool WritePotentials(const std::string &source,
+bool WritePotentials(const string &filename,
                      const std::vector<WeightClass> &potentials) {
   std::ofstream ostrm;
-  if (!source.empty()) {
-    ostrm.open(source);
-    if (!ostrm) {
-      LOG(ERROR) << "WritePotentials: Can't open file: " << source;
+  if (!filename.empty()) {
+    ostrm.open(filename);
+    if (!ostrm.good()) {
+      LOG(ERROR) << "WritePotentials: Can't open file: " << filename;
       return false;
     }
   }
@@ -80,7 +66,7 @@ bool WritePotentials(const std::string &source,
   }
   if (strm.fail()) {
     LOG(ERROR) << "WritePotentials: Write failed: "
-               << (source.empty() ? "standard output" : source);
+               << (filename.empty() ? "standard output" : filename);
     return false;
   }
   return true;

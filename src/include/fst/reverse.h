@@ -1,17 +1,3 @@
-// Copyright 2005-2020 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the 'License');
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an 'AS IS' BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -22,8 +8,6 @@
 
 #include <algorithm>
 #include <vector>
-
-#include <fst/types.h>
 
 #include <fst/cache.h>
 
@@ -48,7 +32,8 @@ template <class FromArc, class ToArc>
 void Reverse(const Fst<FromArc> &ifst, MutableFst<ToArc> *ofst,
              bool require_superinitial = true) {
   using StateId = typename FromArc::StateId;
-  using Weight = typename FromArc::Weight;
+  using FromWeight = typename FromArc::Weight;
+  using ToWeight = typename ToArc::Weight;
   ofst->DeleteStates();
   ofst->SetInputSymbols(ifst.InputSymbols());
   ofst->SetOutputSymbols(ifst.OutputSymbols());
@@ -63,7 +48,7 @@ void Reverse(const Fst<FromArc> &ifst, MutableFst<ToArc> *ofst,
   if (!require_superinitial) {
     for (StateIterator<Fst<FromArc>> siter(ifst); !siter.Done(); siter.Next()) {
       const auto s = siter.Value();
-      if (ifst.Final(s) == Weight::Zero()) continue;
+      if (ifst.Final(s) == FromWeight::Zero()) continue;
       if (ostart != kNoStateId) {
         ostart = kNoStateId;
         break;
@@ -71,11 +56,11 @@ void Reverse(const Fst<FromArc> &ifst, MutableFst<ToArc> *ofst,
         ostart = s;
       }
     }
-    if (ostart != kNoStateId && ifst.Final(ostart) != Weight::One()) {
+    if (ostart != kNoStateId && ifst.Final(ostart) != FromWeight::One()) {
       std::vector<StateId> scc;
       SccVisitor<FromArc> scc_visitor(&scc, nullptr, nullptr, &dfs_iprops);
       DfsVisit(ifst, &scc_visitor);
-      if (std::count(scc.begin(), scc.end(), scc[ostart]) > 1) {
+      if (count(scc.begin(), scc.end(), scc[ostart]) > 1) {
         ostart = kNoStateId;
       } else {
         for (ArcIterator<Fst<FromArc>> aiter(ifst, ostart); !aiter.Done();
@@ -97,9 +82,9 @@ void Reverse(const Fst<FromArc> &ifst, MutableFst<ToArc> *ofst,
     const auto is = siter.Value();
     const auto os = is + offset;
     while (ofst->NumStates() <= os) ofst->AddState();
-    if (is == istart) ofst->SetFinal(os);
+    if (is == istart) ofst->SetFinal(os, ToWeight::One());
     const auto weight = ifst.Final(is);
-    if ((weight != Weight::Zero()) && (offset == 1)) {
+    if ((weight != FromWeight::Zero()) && (offset == 1)) {
       const ToArc oarc(0, 0, weight.Reverse(), os);
       ofst->AddArc(0, oarc);
     }

@@ -1,17 +1,3 @@
-// Copyright 2005-2020 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the 'License');
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an 'AS IS' BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
 // See www.openfst.org for extensive documentation on this weighted
 // finite-state transducer library.
 //
@@ -25,12 +11,11 @@
 #include <utility>
 #include <vector>
 
-#include <fst/types.h>
 #include <fst/log.h>
+
 #include <fst/extensions/pdt/paren.h>
 #include <fst/extensions/pdt/pdt.h>
 #include <fst/shortest-path.h>
-#include <unordered_map>
 
 namespace fst {
 
@@ -39,8 +24,7 @@ struct PdtShortestPathOptions {
   bool keep_parentheses;
   bool path_gc;
 
-  explicit PdtShortestPathOptions(bool keep_parentheses = false,
-                                  bool path_gc = true)
+  PdtShortestPathOptions(bool keep_parentheses = false, bool path_gc = true)
       : keep_parentheses(keep_parentheses), path_gc(path_gc) {}
 };
 
@@ -78,7 +62,7 @@ class PdtShortestPathData {
     StateId state;  // PDT state.
     StateId start;  // PDT paren "start" state.
 
-    explicit SearchState(StateId s = kNoStateId, StateId t = kNoStateId)
+    SearchState(StateId s = kNoStateId, StateId t = kNoStateId)
         : state(s), start(t) {}
 
     bool operator==(const SearchState &other) const {
@@ -90,9 +74,8 @@ class PdtShortestPathData {
   // Specifies paren ID, source and dest "start" states of a paren. These are
   // the "start" states of the respective sub-graphs.
   struct ParenSpec {
-    explicit ParenSpec(Label paren_id = kNoLabel,
-                       StateId src_start = kNoStateId,
-                       StateId dest_start = kNoStateId)
+    ParenSpec(Label paren_id = kNoLabel, StateId src_start = kNoStateId,
+              StateId dest_start = kNoStateId)
         : paren_id(paren_id), src_start(src_start), dest_start(dest_start) {}
 
     Label paren_id;
@@ -120,7 +103,7 @@ class PdtShortestPathData {
     uint8 flags;         // First byte reserved for PdtShortestPathData use.
   };
 
-  explicit PdtShortestPathData(bool gc)
+  PdtShortestPathData(bool gc)
       : gc_(gc), nstates_(0), ngc_(0), finished_(false) {}
 
   ~PdtShortestPathData() {

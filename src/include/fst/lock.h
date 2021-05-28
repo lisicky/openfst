@@ -18,23 +18,11 @@
 #ifndef FST_LIB_LOCK_H_
 #define FST_LIB_LOCK_H_
 
-#ifdef OPENFST_HAS_ABSL
-
-#include "absl/synchronization/mutex.h"
-
-namespace fst {
-
-using absl::Mutex;
-using absl::MutexLock;
-using absl::ReaderMutexLock;
-
-}  // namespace fst
-
-#else  // OPENFST_HAS_ABSL
-
 #include <mutex>
 
 namespace fst {
+
+using namespace std;
 
 class Mutex {
  public:
@@ -70,7 +58,5 @@ class MutexLock {
 using ReaderMutexLock = MutexLock;
 
 }  // namespace fst
-
-#endif  // OPENFST_HAS_ABSL
 
 #endif  // FST_LIB_LOCK_H_
